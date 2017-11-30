@@ -40,8 +40,12 @@ while (1 == 1):
     auto = auto_canny(blurred)
 
     # show the images
+    im, contours, hierarchy = cv2.findContours(auto, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+    cv2.imshow("objects Found", image)
     cv2.imshow("Original", image)
     cv2.imshow("Edges", np.hstack([wide, tight, auto]))
+
     if cv2.waitKey(100) & 0xFF == ord('q'):
         break
     cv2.waitKey(0)
