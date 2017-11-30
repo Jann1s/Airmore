@@ -32,7 +32,9 @@ scl → GPIO3
 2. Download all the required third party software as listed above.
 3. Start Real VNC and Advanced IP Scanner
 4. using Advanced Ip Scanner, scan for IP adresses starting from your local machine's Ip address ( for windows, use ipconfig from command prompt to find it - https://kb.wisc.edu/page.php?id=27309) up to the highest range; mostly 254.
+
 5 Go to network and sharing centre on your windows computer, click wifi network, choose properties and click the sharing tab.check allow other users to connect through this hardware.
+
 ![](Images/NetworkProperties.PNG)
 select one ethernet connection from the drop down and click ok.
 6. The rapsberry pi should be visible now with name (rapsberrypi.mshome.net) or the manufacturer name which is likely to be (Rapsberry Pi Foundation)
