@@ -4,7 +4,7 @@ cv2.namedWindow("preview")
 cameraID = 0
 #Uncomment if running on the pi with the camera
 #vc = cv2.VideoCapture(cameraID)
-vc = cv2.imread('testpicture1.jpg')
+vc = cv2.imread('testimage.png')
 frame = vc
 #if vc.isOpened(): # try to get the first frame
  #   rval, frame = vc.read()
@@ -26,15 +26,19 @@ while 1==1:
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     img = (cv2.cvtColor(mask * edges, cv2.COLOR_GRAY2RGB))
     ########## Lose all hope ye who enter
+    img = cv2.resize(cv2.cvtColor(mask * edges, cv2.COLOR_GRAY2RGB) | frame, (640, 480), interpolation=cv2.INTER_CUBIC)
     #img = cv2.COLOR_RGB2GRAY
     #img = cv2.convertScaleAbs(img)
-    contours, hierarchy, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(edges, contours, -1, (0, 255, 0), 3)
+    #outputImg8U = cv2.convertScaleAbs(img, alpha=(255.0 / 65535.0))
+    #contours, hierarchy, _ = cv2.findContours(outputImg8U, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    #print(contours)
+    #cv2.drawContours(img, contours, 0, (0, 255, 0), 3)
     #cv2.drawContours(img, [contours], 0, (0,255,0), 3)
-    cv2.imwrite('testcountour.jpg', edges)
-    ##########
+    #cv2.imwrite('testcountour.jpg', edges)
+    #########
     #Display image
-    #cv2.imshow("preview", cv2.resize(cv2.cvtColor(mask * edges, cv2.COLOR_GRAY2RGB) | frame, (640, 480), interpolation=cv2.INTER_CUBIC))
+    cv2.imshow("test", edges)
+    cv2.imshow("preview",img)
     #rval, frame = vc.read()
     key = cv2.waitKey(20)
     if key == 27:  # exit on ESC
