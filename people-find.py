@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 cv2.namedWindow("preview")
 cameraID = 0
-cap = cv2.imread('testimage4.jpg', 0);
+cap = cv2.imread('testimage.jpg', 0);
 ##vc = cv2.VideoCapture(cameraID)
 
 ##if vc.isOpened(): # try to get the first frame
