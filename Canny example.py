@@ -1,4 +1,4 @@
-# iimport cv2
+# import cv2
 # import numpy as np
 # from matplotlib import pyplot as plt
 #
@@ -44,6 +44,7 @@ def auto_canny(image, sigma=0.33):
 # for imagePath in glob.glob(args["images"] + "/*.jpg"):
     # load the image, convert it to grayscale, and blur it slightly
 while (1==1):
+    #Changes color from RGB to HSV
     image = cv2.applyColorMap(cv2.imread('testimage.png',0),cv2.COLORMAP_HSV)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (3, 3), 0)

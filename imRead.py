@@ -1,3 +1,4 @@
+#see if an image can be fed
 import numpy as np
 import cv2
 cap = cv2.imread('testimage.png', 0);
