@@ -1,28 +1,38 @@
-import cv2
+# import the necessary packages
 import numpy as np
-cv2.namedWindow("preview")
-cameraID = 0
-vc = cv2.VideoCapture(cameraID)
+import argparse
+import cv2
+import sys
+# construct the argument parse and parse the arguments
 
-if vc.isOpened(): # try to get the first frame
-    rval, frame = vc.read()
-else:
-    rval = False
-
-while rval:
-    frame_v = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)[:,:,2]
-
-    blurredBrightness = cv2.bilateralFilter(frame_v,9,150,150)
-    thresh = 50
-    edges = cv2.Canny(blurredBrightness,thresh,thresh*2, L2gradient=True)
-
-    _,mask = cv2.threshold(blurredBrightness,200,1,cv2.THRESH_BINARY)
-    erodeSize = 5
-    dilateSize = 7
-    eroded = cv2.erode(mask, np.ones((erodeSize, erodeSize)))
-    mask = cv2.dilate(eroded, np.ones((dilateSize, dilateSize)))
-    cv2.imshow("preview", cv2.resize(cv2.cvtColor(mask*edges, cv2.COLOR_GRAY2RGB) | frame, (640, 480), interpolation = cv2.INTER_CUBIC))
-    rval, frame = vc.read()
-    key = cv2.waitKey(20)
-    if key == 27: # exit on ESC
-        break
+# load the image
+people_count = 0
+image =  cv2.resize(cv2.imread('img2.jpg'),(640,480))
+# define the list of boundaries (pixel color)
+boundaries = [
+	([165, 165, 165], [255, 255, 255])
+]
+# loop over the boundaries
+for (lower, upper) in boundaries:
+	# create NumPy arrays from the boundaries
+	lower = np.array(lower, dtype = "uint8")
+	upper = np.array(upper, dtype = "uint8")
+	# find the colors within the specified boundaries and apply
+	# the mask
+	mask = cv2.inRange(image, lower, upper)
+	output = cv2.bitwise_and(image, image, mask = mask)
+cimg= cv2.cvtColor(output, cv2.COLOR_BGR2GRAY)
+	# show the images
+# circles = cv2.HoughCircles(cimg, cv2.HOUGH_GRADIENT, 1, 1, param1=50, param2=30, minRadius=0, maxRadius=0)  # 10 58
+# if circles is None:
+#     sys.exit('No circles found!')
+# circles = np.uint16(np.around(circles))
+# for i in circles[0, :]:
+#     cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
+#     people_count += 1;
+#     print(people_count)
+# cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
+#
+cv2.imshow('detected circles', output)
+cv2.imshow("images", np.hstack([image, output]))
+cv2.waitKey(0)
