@@ -1,70 +1,78 @@
-import cv2
 import numpy as np
-cv2.namedWindow("preview")
-cameraID = 0
-#Uncomment if running on the pi with the camera
-#vc = cv2.VideoCapture(cameraID)
-vc = cv2.imread('1.jpg')
-frame = vc
-#if vc.isOpened(): # try to get the first frame
- #   rval, frame = vc.read()
-#else:
- #   rval = False
+import argparse
+import glob
+import cv2
+import sys
+#function that draws the smallest circle enclosing the contour
+def draw_Cirles(contour):
+    (x, y), radius = cv2.minEnclosingCircle(contour)
+    center = (int(x), int(y))
+    radius = int(radius)
+    print radius
+    if(radius > 60):
+        cv2.circle(output, center, radius, (0, 255, 0), 2)
 
-while 1==1:
-    frame_v = cv2.applyColorMap(cv2.imread('1.jpg', 0), cv2.COLORMAP_HSV)
-    blurredBrightness = cv2.bilateralFilter(frame_v,9,150,150)
-    thresh = 50
-    #Apply canny edge
-    edges = cv2.Canny(blurredBrightness,thresh,thresh*2, L2gradient=True)
-    _,mask = cv2.threshold(blurredBrightness,200,1,cv2.THRESH_BINARY)
-    erodeSize = 5
-    dilateSize = 7
-    eroded = cv2.erode(mask, np.ones((erodeSize, erodeSize)))
-    mask = cv2.dilate(eroded, np.ones((dilateSize, dilateSize)))
+image =  cv2.resize(cv2.imread('iot6.png'),(640,480))
+# define the list of boundaries (pixel color)
+cv2.imshow("original",image)
 
-    #Convert mask to gray otherwise it don't work
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    img = (cv2.cvtColor(mask * edges, cv2.COLOR_GRAY2RGB))
-    ########## Lose all hope ye who enter
-    img = cv2.resize(cv2.cvtColor(mask * edges, cv2.COLOR_GRAY2RGB) | frame, (640, 480), interpolation=cv2.INTER_CUBIC)
-    # detect circles in the image
-    img = cv2.COLOR_RGB2GRAY
-    #img = cv2.convertScaleAbs(img)
-    #img = cv2.convertScaleAbs(img, alpha=(255.0 / 65535.0))
-    #contours, hierarchy, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    #print(contours)
-    #cv2.drawContours(img, contours, 0, (0, 255, 0), 3)
-    #cv2.drawContours(img, [contours], 0, (0,255,0), 3)
-    circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1, 10, param1=200, param2=100, minRadius=2, maxRadius=70)
 
-    # circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1.2, 100)
-    # ensure at least some circles were found
-    if circles is not None:
-        # convert the (x, y) coordinates and radius of the circles to integers
-        circles = np.round(circles[0, :]).astype("int")
-        print "fas"
-        # loop over the (x, y) coordinates and radius of the circles
-        for (x, y, r) in circles:
-            # draw the circle in the output image, then draw a rectangle
-            # corresponding to the center of the circle
-            cv2.circle(img, (x, y), r, (0, 255, 0), 4)
-            cv2.rectangle(img, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+# apply a Gaussian blur to the image then find the brightest
+# region
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+gray = cv2.GaussianBlur(gray, (119,119), 0)
+(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
+print minVal
+boundaries = [
+	([maxVal-80, maxVal-80, maxVal-80], [255, 255, 255]) # TODO: adjust threshold accordingly!!!
+]
+copy = image.copy()
+cv2.circle(copy, maxLoc, 45, (255, 0, 0), 2)
+# display the results
+cv2.imshow("Robust", gray)
+# Loop over the boundaries
+for (lower, upper) in boundaries:
+	# create NumPy arrays from the boundaries
+	lower = np.array(lower, dtype = "uint8")
+	upper = np.array(upper, dtype = "uint8")
+	# find the colors within the specified boundaries and apply
+	# the mask
+	mask = cv2.inRange(image, lower, upper)
+	output = cv2.bitwise_and(image, image, mask = mask)
 
-        # show the output image
-        cv2.imshow("output", np.hstack([img, img]))
-        cv2.waitKey(0)
-        for i in circles[0, :]:
-            # draw the outer circle
-            cv2.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 2)
-            # draw the center of the circle
-            cv2.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
-    cv2.imwrite('testcircle.jpg', img)
-    #########
-    #Display image
-    cv2.imshow("test", edges)
-    cv2.imshow("preview",img)
-    #rval, frame = vc.read()
-    key = cv2.waitKey(20)
-    if key == 27:  # exit on ESC
-        break
+# Apply bilateral filtered image
+bilateral_filtered_image = cv2.bilateralFilter(output, 5, 175, 175)
+cv2.imshow("bilateral", bilateral_filtered_image)
+# Canny edge magic
+edge_detected_image = cv2.Canny(bilateral_filtered_image, 75, 200)
+cv2.imshow("Canny", edge_detected_image)
+
+# Now lets find the countors
+_, contours, hierarchy = cv2.findContours(edge_detected_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+contour_list = []
+
+# Sexy loop combined with approxPolyDP
+for contour in contours:
+    approx = cv2.approxPolyDP(contour,0.01*cv2.arcLength(contour,True),True)
+    area = cv2.contourArea(contour)
+    draw_Cirles(contour)
+    if ((len(approx) > 8) & (len(approx) < 23) & (area > 6000) & (area < 99999) ):
+        #print area
+        contour_list.append(contour)
+
+
+
+# Draw contours based on the results from contours_list
+cv2.drawContours(output, contour_list,  -1, (0,255,0), 2)
+if(len(contour_list) > 0):
+    print(str(len(contour_list)) + " persons were found in this picture")
+    cv2.imshow("Result", output)
+    cv2.waitKey(0)
+else:
+    cv2.imshow("Result", output)
+    print("got nothing")
+    cv2.waitKey(0)
+
+
+
